@@ -31,7 +31,15 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	response := gin.H{
+		"message": "User details by Id",
+		"data": gin.H{
+			"user": user,  // user représente les détails de l'utilisateur récupéré
+		},
+	}
+	
+	c.JSON(http.StatusOK, response)
+	
 }
 
 // UpdateUser updates a user's information

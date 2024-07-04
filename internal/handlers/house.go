@@ -68,7 +68,15 @@ func (h *HouseHandler) GetHouseByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, house)
+	response := gin.H{
+		"message": "House details retrieved successfully bY id",
+		"data": gin.H{
+			"house": house,  
+		},
+	}
+	
+	c.JSON(http.StatusOK, response)
+	
 }
 
 // UpdateHouse updates a house listing
@@ -116,5 +124,13 @@ func (h *HouseHandler) GetHousesByOwner(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve houses  by owner ID "})
 		return
 	}
-	c.JSON(http.StatusOK, houses)
+	response := gin.H{
+		"message": "Houses retrieved successfully by owner ID",
+		"data": gin.H{
+			"houses": houses,  // houses représente la liste des maisons récupérées
+		},
+	}
+	
+	c.JSON(http.StatusOK, response)
+	
 }
