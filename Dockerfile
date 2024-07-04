@@ -1,15 +1,21 @@
-# Utilisez une image Alpine basée sur Go 1.22.4
-FROM golang:1.22.4-alpine
+FROM golang:1.22-alpine3.20 AS builder
 
-# Définissez le répertoire de travail à l'intérieur du conteneur
 WORKDIR /app
 
-# Copiez les fichiers de dépendances et téléchargez-les
 COPY go.mod go.sum ./
-RUN go mod tidy
 
-# Copiez tout le reste des fichiers de votre application
+RUN go mod download
+
 COPY . .
 
-# Exécutez votre application avec go run main.go
-CMD ["go", "run", "cmd/server/main.go"]
+WORKDIR /app/cmd/server
+
+RUN go build -o /app/main .
+
+FROM alpine:latest  
+
+COPY --from=builder /app/main /app/main
+
+EXPOSE 8080
+
+ENTRYPOINT ["/app/main"]
