@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgresql://mohamed:12345@db:5432/rented_db?sslmode=disable
+      - SECRET_KEY=your_secret_key
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: mohamed
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: rented_db
+    ports:
+      - "5433:5432"

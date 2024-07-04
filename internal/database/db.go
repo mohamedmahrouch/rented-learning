@@ -1,38 +1,24 @@
+// internal/database/db.go
 package database
 
 import (
-    "fmt"
-    "os"
+	"fmt"
 
-    "github.com/jmoiron/sqlx"
-    _ "github.com/lib/pq" // Pilote PostgreSQL
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
-var (
-    db *sqlx.DB
-)
+// InitDB initializes a connection to the PostgreSQL database
+func InitDB(databaseURL string) (*sqlx.DB, error) {
+	db, err := sqlx.Open("postgres", databaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to the database: %v", err)
+	}
 
+	err = db.Ping()
+	if err != nil {
+		return nil, fmt.Errorf("failed to ping the database: %v", err)
+	}
 
-func InitDB() (*sqlx.DB, error) {
-    dbURL := os.Getenv("DATABASE_URL") // Récupérer l'URL de la base de données depuis les variables d'environnement
-
-    // Ouvrir une connexion à la base de données
-    conn, err := sqlx.Open("postgres", dbURL)
-    if err != nil {
-        return nil, fmt.Errorf("erreur lors de l'ouverture de la connexion à la base de données : %v", err)
-    }
-
-    // Vérifier la connexion à la base de données
-    err = conn.Ping()
-    if err != nil {
-        return nil, fmt.Errorf("erreur lors de la vérification de la connexion à la base de données : %v", err)
-    }
-
-    db = conn
-    return db, nil
-}
-
-// GetDB retourne l'instance de la connexion à la base de données
-func GetDB() *sqlx.DB {
-    return db
+	return db, nil
 }

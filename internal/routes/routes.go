@@ -1,3 +1,4 @@
+// internal/routes/routes.go
 package routes
 
 import (
@@ -6,21 +7,24 @@ import (
 	"github.com/mohamedmahrouch/rented/internal/handlers"
 )
 
-// SetupRoutes configure toutes les routes pour l'application
-func SetupRoutes(r *gin.Engine, db *sqlx.DB) {
-	// Routes publiques
-	r.POST("/register", handlers.Register) // Endpoint pour l'inscription d'un nouvel utilisateur
-	r.POST("/login", handlers.Login)       // Endpoint pour la connexion d'un utilisateur
+// SetupRoutes configures all the routes for the application
+func SetupRoutes(router *gin.Engine, db *sqlx.DB) {
+	authHandler := handlers.NewAuthHandler(db)
+	houseHandler := handlers.NewHouseHandler(db)
+	userHandler := handlers.NewUserHandler(db)
 
-	// Routes nécessitant une authentification
-	auth := r.Group("/")
-	auth.Use() // Middleware d'authentification à ajouter ici si nécessaire
-	{
-		auth.GET("/profile", handlers.GetUserProfile)        // Endpoint pour récupérer le profil de l'utilisateur
-		auth.POST("/houses", handlers.CreateHouse)           // Endpoint pour créer une nouvelle maison
-		auth.GET("/houses", handlers.GetHouses)              // Endpoint pour récupérer toutes les maisons
-		auth.PUT("/houses/:id", handlers.UpdateHouse)        // Endpoint pour mettre à jour une maison spécifique
-		auth.DELETE("/houses/:id", handlers.DeleteHouse)     // Endpoint pour supprimer une maison spécifique
-		auth.GET("/owner/houses", handlers.GetHousesByOwner) // Endpoint pour récupérer les maisons d'un propriétaire spécifique
-	}
+	router.POST("/register", authHandler.Register)
+	router.POST("/login", authHandler.Login)
+    
+
+	router.GET("/houses", houseHandler.GetHouses)
+	router.POST("/houses", houseHandler.CreateHouse)
+	router.GET("/houses/:id", houseHandler.GetHouseByID)
+	router.PUT("/houses/:id", houseHandler.UpdateHouse)
+	router.DELETE("/houses/:id", houseHandler.DeleteHouse)
+	router.GET("/houses/user/:id", houseHandler.GetHousesByOwner)
+
+	router.GET("/users/:id", userHandler.GetUserByID)
+	router.PUT("/users/:id", userHandler.UpdateUser)
+	router.DELETE("/users/:id", userHandler.DeleteUser)
 }

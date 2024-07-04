@@ -1,109 +1,120 @@
+// internal/handlers/house.go
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
-	"github.com/mohamedmahrouch/rented/internal/models"
-
 	"github.com/gin-gonic/gin"
+	"github.com/jmoiron/sqlx"
+	"github.com/mohamedmahrouch/rented/internal/models"
 )
 
-// CreateHouse crée une nouvelle maison
-func CreateHouse(c *gin.Context) {
+// HouseHandler handles house related requests
+type HouseHandler struct {
+	DB *sqlx.DB
+}
+
+// NewHouseHandler creates a new HouseHandler
+func NewHouseHandler(db *sqlx.DB) *HouseHandler {
+	return &HouseHandler{DB: db}
+}
+
+// GetHouses retrieves the list of houses
+func (h *HouseHandler) GetHouses(c *gin.Context) {
+	var houses []models.House
+	err := h.DB.Select(&houses, "SELECT * FROM houses")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve houses"})
+		return
+	}
+
+	response := gin.H{
+        "message": "Maisons du propriétaire récupérées avec succès :",
+        "data": gin.H{
+            "houses": houses,
+        },
+    }
+
+    c.JSON(http.StatusOK, response)
+}
+
+// CreateHouse creates a new house listing
+func (h *HouseHandler) CreateHouse(c *gin.Context) {
 	var house models.House
-	// Bind les données JSON envoyées par le client à la structure models.House
 	if err := c.ShouldBindJSON(&house); err != nil {
-		// Si une erreur se produit lors du binding, retourne une réponse HTTP avec le statut BadRequest
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Récupère l'ID du propriétaire à partir du contexte et l'assigne à la maison
-	ownerID, _ := strconv.Atoi(c.GetString("userID"))
-	house.OwnerID = ownerID
-
-	// Création de la maison dans la base de données
-	_, err := models.CreateHouse(house)
+	_, err := h.DB.NamedExec(`INSERT INTO houses (title, description, price, owner_id) VALUES (:title, :description, :price, :owner_id)`, &house)
 	if err != nil {
-		// Si une erreur se produit lors de la création de la maison, retourne une réponse HTTP avec le statut InternalServerError
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create house listing"})
 		return
 	}
 
-	// Réponse réussie avec le statut Created si tout se passe bien
-	c.JSON(http.StatusCreated, gin.H{"message": "House created successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "House listing created successfully"})
 }
 
-// GetHouses récupère toutes les maisons
-func GetHouses(c *gin.Context) {
-	// Récupère toutes les maisons depuis la base de données
-	houses, err := models.GetAllHouses()
-	if err != nil {
-		// Si une erreur se produit lors de la récupération des maisons, retourne une réponse HTTP avec le statut InternalServerError
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Réponse réussie avec la liste des maisons et le statut OK si tout se passe bien
-	c.JSON(http.StatusOK, gin.H{"houses": houses})
-}
-
-// UpdateHouse met à jour une maison existante
-func UpdateHouse(c *gin.Context) {
-	// Récupère l'ID de la maison à mettre à jour depuis les paramètres de l'URL
-	id, _ := strconv.Atoi(c.Param("id"))
+// GetHouseByID retrieves a house by its ID
+func (h *HouseHandler) GetHouseByID(c *gin.Context) {
+	id := c.Param("id")
 
 	var house models.House
-	// Bind les données JSON envoyées par le client à la structure models.House
+	err := h.DB.Get(&house, "SELECT * FROM houses WHERE id=$1", id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve house by its ID"})
+		return
+	}
+
+	c.JSON(http.StatusOK, house)
+}
+
+// UpdateHouse updates a house listing
+func (h *HouseHandler) UpdateHouse(c *gin.Context) {
+	id := c.Param("id")
+	var house models.House
 	if err := c.ShouldBindJSON(&house); err != nil {
-		// Si une erreur se produit lors du binding, retourne une réponse HTTP avec le statut BadRequest
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Met à jour la maison dans la base de données
-	err := models.UpdateHouse(id, house)
+	house.ID, _ = strconv.Atoi(id)
+
+	_, err := h.DB.NamedExec(`UPDATE houses SET title=:title, description=:description, price=:price WHERE id=:id`, &house)
 	if err != nil {
-		// Si une erreur se produit lors de la mise à jour de la maison, retourne une réponse HTTP avec le statut InternalServerError
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update house listing"})
 		return
 	}
 
-	// Réponse réussie avec un message et le statut OK si tout se passe bien
-	c.JSON(http.StatusOK, gin.H{"message": "House updated successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "House listing updated successfully"})
 }
 
-// DeleteHouse supprime une maison existante
-func DeleteHouse(c *gin.Context) {
-	// Récupère l'ID de la maison à supprimer depuis les paramètres de l'URL
-	id, _ := strconv.Atoi(c.Param("id"))
+// DeleteHouse deletes a house listing
+func (h *HouseHandler) DeleteHouse(c *gin.Context) {
+	id := c.Param("id")
 
-	// Supprime la maison de la base de données
-	err := models.DeleteHouse(id)
+	_, err := h.DB.Exec("DELETE FROM houses WHERE id=$1", id)
 	if err != nil {
-		// Si une erreur se produit lors de la suppression de la maison, retourne une réponse HTTP avec le statut InternalServerError
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete house listing"})
 		return
 	}
 
-	// Réponse réussie avec un message et le statut OK si tout se passe bien
-	c.JSON(http.StatusOK, gin.H{"message": "House deleted successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "House listing deleted successfully"})
 }
 
-// GetHousesByOwner récupère toutes les maisons appartenant à un propriétaire spécifique
-func GetHousesByOwner(c *gin.Context) {
-	// Récupère l'ID du propriétaire à partir du contexte
-	ownerID, _ := strconv.Atoi(c.GetString("userID"))
-
-	// Récupère toutes les maisons appartenant à ce propriétaire depuis la base de données
-	houses, err := models.GetHousesByOwner(ownerID)
+// GetHousesByOwner retrieves the list of houses by owner ID
+func (h *HouseHandler) GetHousesByOwner(c *gin.Context) {
+	ownerID := c.Param("id")
+	fmt.Println(ownerID)
+	var houses []models.House
+	err := h.DB.Select(&houses, "SELECT * FROM houses WHERE owner_id=$1", ownerID)
+	fmt.Println(err)
 	if err != nil {
-		// Si une erreur se produit lors de la récupération des maisons, retourne une réponse HTTP avec le statut InternalServerError
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		fmt.Println("hhhhhhh")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve houses  by owner ID "})
 		return
 	}
-
-	// Réponse réussie avec la liste des maisons et le statut OK si tout se passe bien
-	c.JSON(http.StatusOK, gin.H{"houses": houses})
+	c.JSON(http.StatusOK, houses)
 }

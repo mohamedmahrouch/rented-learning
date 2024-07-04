@@ -1,0 +1,45 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "make",
+            "args": ["build"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$go"]
+        },
+        {
+            "label": "debug",
+            "type": "shell",
+            "command": "dlv",
+            "args": [
+                "exec",
+                "${workspaceFolder}/bin/server",
+                "--headless",
+                "--listen=:2345",
+                "--api-version=2"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$go"],
+            "isBackground": true,
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "options": {
+                "env": {
+                    "GOFLAGS": "-tags=integration"
+                }
+            }
+        }
+    ]
+}
