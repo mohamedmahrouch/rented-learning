@@ -28,7 +28,7 @@ func main() {
 	routes.SetupRoutes(router, db)
 
 	
-	err = router.Run(":8080")
+	err = router.Run("0.0.0.0:8080")
 	if err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}

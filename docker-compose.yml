@@ -5,17 +5,24 @@ services:
     build: .
     ports:
       - "8080:8080"
-    environment:
-      - DATABASE_URL=postgresql://mohamed:12345@db:5432/rented_db?sslmode=disable
-      - SECRET_KEY=your_secret_key
+    env_file:
+      - .env
     depends_on:
-      - db
+      - postgres 
+    networks:
+      - app-network
 
-  db:
+  postgres:
     image: postgres:latest
     environment:
       POSTGRES_USER: mohamed
       POSTGRES_PASSWORD: 12345
       POSTGRES_DB: rented_db
     ports:
-      - "5433:5432"
+      - "5432:5432"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
