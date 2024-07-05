@@ -30,14 +30,7 @@ func (h *HouseHandler) GetHouses(c *gin.Context) {
 		return
 	}
 
-	response := gin.H{
-        "message": "Maisons du propriétaire récupérées avec succès :",
-        "data": gin.H{
-            "houses": houses,
-        },
-    }
-
-    c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, houses)
 }
 
 // CreateHouse creates a new house listing
@@ -71,12 +64,12 @@ func (h *HouseHandler) GetHouseByID(c *gin.Context) {
 	response := gin.H{
 		"message": "House details retrieved successfully bY id",
 		"data": gin.H{
-			"house": house,  
+			"house": house,
 		},
 	}
-	
+
 	c.JSON(http.StatusOK, response)
-	
+
 }
 
 // UpdateHouse updates a house listing
@@ -127,10 +120,10 @@ func (h *HouseHandler) GetHousesByOwner(c *gin.Context) {
 	response := gin.H{
 		"message": "Houses retrieved successfully by owner ID",
 		"data": gin.H{
-			"houses": houses,  // houses représente la liste des maisons récupérées
+			"houses": houses, // houses représente la liste des maisons récupérées
 		},
 	}
-	
+
 	c.JSON(http.StatusOK, response)
-	
+
 }
