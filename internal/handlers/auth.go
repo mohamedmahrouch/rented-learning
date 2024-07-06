@@ -1,4 +1,3 @@
-
 package handlers
 
 import (
@@ -35,7 +34,9 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Échec du hachage du mot de passe: " + err.Error()})
 		return
 	}
+
 	user.Password = string(hashedPassword)
+	
 	fmt.Println("User after password hashing:", user)
 	_, err = h.DB.NamedExec(`INSERT INTO users (name, email, password) VALUES (:name, :email, :password)`, &user)
 	if err != nil {
@@ -60,10 +61,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Email ou mot de passe incorrect"})
 		return
 	}
-
+	fmt.Println(user.Password)
+	fmt.Println(credentials.Password)
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(credentials.Password))
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Email ou mot de passe invalide"})
+
+
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "mot de passe invalie"})
 		return
 	}
 
@@ -73,6 +77,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK,gin.H{"message": "Bienvenue vos information est correct!" ,"token": token})
-	
+	c.JSON(http.StatusOK, gin.H{"message": "Bienvenue vos information est correct!", "token": token})
+
 }
