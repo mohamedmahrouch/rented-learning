@@ -61,14 +61,8 @@ func (h *HouseHandler) GetHouseByID(c *gin.Context) {
 		return
 	}
 
-	response := gin.H{
-		"message": "House details retrieved successfully bY id",
-		"data": gin.H{
-			"house": house,
-		},
-	}
-
-	c.JSON(http.StatusOK, response)
+	
+	c.JSON(http.StatusOK, house)
 
 }
 
