@@ -26,6 +26,7 @@ func (h *HouseHandler) GetHouses(c *gin.Context) {
 	var houses []models.House
 	err := h.DB.Select(&houses, "SELECT * FROM houses")
 	if err != nil {
+		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve houses"})
 		return
 	}
