@@ -29,11 +29,11 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Vérifier si l'utilisateur existe déjà
+	// Vérifier si l'utilisateur existe déja
 	var existingUser models.User
 	err := h.DB.Get(&existingUser, "SELECT * FROM users WHERE email = $1", user.Email)
 	if err == nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "L'utilisateur avec cet e-mail existe déjà"})
+		c.JSON(http.StatusConflict, gin.H{"error": "user_exists"})
 		return
 	}
 
