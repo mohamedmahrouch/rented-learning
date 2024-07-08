@@ -29,6 +29,14 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
+	// Vérifier si l'utilisateur existe déjà
+	var existingUser models.User
+	err := h.DB.Get(&existingUser, "SELECT * FROM users WHERE email = $1", user.Email)
+	if err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "L'utilisateur avec cet e-mail existe déjà"})
+		return
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Échec du hachage du mot de passe: " + err.Error()})
@@ -36,7 +44,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	user.Password = string(hashedPassword)
-	
+
 	fmt.Println("User after password hashing:", user)
 	_, err = h.DB.NamedExec(`INSERT INTO users (name, email, password) VALUES (:name, :email, :password)`, &user)
 	if err != nil {
@@ -65,7 +73,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	fmt.Println(credentials.Password)
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(credentials.Password))
 	if err != nil {
-
 
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "mot de passe invalie"})
 		return
